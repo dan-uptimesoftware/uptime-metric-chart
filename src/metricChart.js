@@ -271,7 +271,7 @@
 	$("select.performance-metrics").on('change', function(evt, params) {
 		$("select.performance-elements").empty();
 		$("select.performance-elements").trigger("chosen:updated");
-		requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=elements_for_performance';
+		requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=groups_for_performance';
 		if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};
 		$.getJSON(requestString, function(data) {}).done(function(data) {
 			if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Request succeeded!')};

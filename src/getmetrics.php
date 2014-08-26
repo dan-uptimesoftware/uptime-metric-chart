@@ -41,6 +41,9 @@ if (isset($_GET['monitor'])){
 if (isset($_GET['element'])){
 	$elementList = explode(",", $_GET['element']);
 }
+if (isset($_GET['group'])){
+	$groupList = explode(",", $_GET['group']);
+}
 
 if (isset($_GET['port'])){
 	$ports = explode(",", $_GET['port']);
@@ -381,147 +384,164 @@ elseif ($query_type == "elements_for_performance") {
     echo json_encode($json);
 }
 
+// Enumerate elements with performance counters   
+elseif ($query_type == "groups_for_performance") {
+    $sql = "select entity_group_id, name from entity_group;
+            ";
+			
+	    $result = $db->execQuery($sql);
+		
+		foreach ($result as $row) {
+			$json[$row['NAME']] = $row['ENTITY_GROUP_ID'];
+		}
+	
+	// Echo results as JSON
+    echo json_encode($json);
+}
+
 // Get performance metrics
 elseif ($query_type == "performance") {
 
-	foreach ($elementList as $element_id) {
+	foreach ($elementList as $group_id) {
 
+		$get_elements_sql = "select entity_id, display_name from entity where entity_group_id = $group_id";
+		$elements_from_group = $db->execQuery($get_elements_sql);
 
-		if ($performance_monitor == "cpu") {
-			if ($db->dbType == "mysql") {
-			$sql = "Select ps.uptimehost_id, ps.sample_time, pa.cpu_usr, pa.cpu_sys , pa.cpu_wio
+		foreach ($elements_from_group as $eg) {
+			$element_id = $eg['ENTITY_ID'];
+
+			if ($performance_monitor == "cpu") {
+				if ($db->dbType == "mysql") {
+				$sql = "Select ps.uptimehost_id, ps.sample_time, pa.cpu_usr, pa.cpu_sys , pa.cpu_wio
+						from performance_sample ps 
+						join performance_aggregate pa on pa.sample_id = ps.id
+						where ps.uptimehost_id = $element_id					
+						and ps.sample_time > date_sub(now(),interval  ". $time_frame . " second)
+						order by ps.sample_time";
+				}
+				elseif($db->dbType == "oracle") {
+				$sql = "Select ps.uptimehost_id, ps.sample_time, pa.cpu_usr, pa.cpu_sys , pa.cpu_wio
+						from performance_sample ps 
+						join performance_aggregate pa on pa.sample_id = ps.id
+						where ps.uptimehost_id = $element_id					
+						and ps.sample_time > sysdate - interval  '". $time_frame . "' second
+						order by ps.sample_time";
+
+				}
+				elseif($db->dbType == "mssql")
+				{
+				$sql = "Select ps.uptimehost_id, ps.sample_time, pa.cpu_usr, pa.cpu_sys , pa.cpu_wio
 					from performance_sample ps 
 					join performance_aggregate pa on pa.sample_id = ps.id
-					where ps.uptimehost_id = $element_id					
-					and ps.sample_time > date_sub(now(),interval  ". $time_frame . " second)
+					where ps.uptimehost_id = $element_id	
+					and ps.sample_time > DATEADD(second, -". $time_frame . ", GETDATE())
 					order by ps.sample_time";
+				}
+
+						
 			}
-			elseif($db->dbType == "oracle") {
-			$sql = "Select ps.uptimehost_id, ps.sample_time, pa.cpu_usr, pa.cpu_sys , pa.cpu_wio
+			elseif ($performance_monitor == "used_swap_percent" or $performance_monitor == "worst_disk_usage" or $performance_monitor == "worst_disk_busy"){
+				if ($db->dbType == "mysql") {
+				$sql = "Select ps.uptimehost_id, ps.sample_time, pa.$performance_monitor as value
+						from performance_sample ps 
+						join performance_aggregate pa on pa.sample_id = ps.id
+						where ps.uptimehost_id = $element_id
+						and ps.sample_time > date_sub(now(),interval  ". $time_frame . " second)
+						order by ps.sample_time";
+				}
+				elseif($db->dbType == "oracle") {
+				$sql = "Select ps.uptimehost_id, ps.sample_time, pa.$performance_monitor as value
+						from performance_sample ps 
+						join performance_aggregate pa on pa.sample_id = ps.id
+						where ps.uptimehost_id = $element_id
+						and ps.sample_time > sysdate - interval  '". $time_frame . "' second
+						order by ps.sample_time";
+
+
+				}
+				elseif($db->dbType == "mssql")
+				{
+				$sql = "Select ps.uptimehost_id, ps.sample_time, pa.$performance_monitor as value
 					from performance_sample ps 
 					join performance_aggregate pa on pa.sample_id = ps.id
-					where ps.uptimehost_id = $element_id					
-					and ps.sample_time > sysdate - interval  '". $time_frame . "' second
-					order by ps.sample_time";
-
-			}
-			elseif($db->dbType == "mssql")
-			{
-			$sql = "Select ps.uptimehost_id, ps.sample_time, pa.cpu_usr, pa.cpu_sys , pa.cpu_wio
-				from performance_sample ps 
-				join performance_aggregate pa on pa.sample_id = ps.id
-				where ps.uptimehost_id = $element_id	
-				and ps.sample_time > DATEADD(second, -". $time_frame . ", GETDATE())
-				order by ps.sample_time";
-			}
-
-					
-		}
-		elseif ($performance_monitor == "used_swap_percent" or $performance_monitor == "worst_disk_usage" or $performance_monitor == "worst_disk_busy"){
-			if ($db->dbType == "mysql") {
-			$sql = "Select ps.uptimehost_id, ps.sample_time, pa.$performance_monitor as value
-					from performance_sample ps 
-					join performance_aggregate pa on pa.sample_id = ps.id
-					where ps.uptimehost_id = $element_id
-					and ps.sample_time > date_sub(now(),interval  ". $time_frame . " second)
-					order by ps.sample_time";
-			}
-			elseif($db->dbType == "oracle") {
-			$sql = "Select ps.uptimehost_id, ps.sample_time, pa.$performance_monitor as value
-					from performance_sample ps 
-					join performance_aggregate pa on pa.sample_id = ps.id
-					where ps.uptimehost_id = $element_id
-					and ps.sample_time > sysdate - interval  '". $time_frame . "' second
-					order by ps.sample_time";
-
-
-			}
-			elseif($db->dbType == "mssql")
-			{
-			$sql = "Select ps.uptimehost_id, ps.sample_time, pa.$performance_monitor as value
-				from performance_sample ps 
-				join performance_aggregate pa on pa.sample_id = ps.id
-				where ps.uptimehost_id = $element_id
-				and ps.sample_time > DATEADD(second, -". $time_frame . ", GETDATE())
-				order by ps.sample_time";
-
-			}
-		}
-		elseif ($performance_monitor == "memory") {
-			if ($db->dbType == 'mysql')
-			{
-			$sql = "Select ps.uptimehost_id, pa.sample_id, ps.sample_time, pa.free_mem, ec.memsize
-					from performance_sample ps
-					join performance_aggregate pa on pa.sample_id = ps.id
-					join entity_configuration ec on ec.entity_id = ps.uptimehost_id
-					where ps.uptimehost_id = $element_id
-					and ps.sample_time > date_sub(now(),interval  ". $time_frame . " second)
-					order by ps.sample_time";
-			}
-			elseif($db->dbType == "oracle") {
-			$sql = "Select ps.uptimehost_id, pa.sample_id, ps.sample_time, pa.free_mem, ec.memsize
-					from performance_sample ps
-					join performance_aggregate pa on pa.sample_id = ps.id
-					join entity_configuration ec on ec.entity_id = ps.uptimehost_id
-					where ps.uptimehost_id = $element_id
-					and ps.sample_time > sysdate - interval  '". $time_frame . "' second
-					order by ps.sample_time";
-
-			}
-			elseif($db->dbType == "mssql")
-			{
-			$sql = "Select ps.uptimehost_id, pa.sample_id, ps.sample_time, pa.free_mem, ec.memsize
-					from performance_sample ps
-					join performance_aggregate pa on pa.sample_id = ps.id
-					join entity_configuration ec on ec.entity_id = ps.uptimehost_id
 					where ps.uptimehost_id = $element_id
 					and ps.sample_time > DATEADD(second, -". $time_frame . ", GETDATE())
 					order by ps.sample_time";
-			}
 
-
-		}
-		else {
-			die('Invalid query');
-		}
-     
-			$result = $db->execQuery($sql);
-
-			foreach($result as $row) {
-				$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
-				$x = $sample_time * 1000;
-				if ($performance_monitor == "cpu") {
-					$a = (float)$row['CPU_USR'];
-					$b = (float)$row['CPU_SYS'];
-					$c = (float)$row['CPU_WIO'];
-					$y = ($a + $b + $c);
-				} elseif ($performance_monitor == "memory") {
-					$total_ram = (float)$row['MEMSIZE'];
-					$free_ram = (float)$row['FREE_MEM'];
-					$used_ram = $total_ram - $free_ram;
-					$y = round(($used_ram / $total_ram * 100), 1);
-				} elseif ($performance_monitor == "used_swap_percent" or $performance_monitor == "worst_disk_usage"
-							or $performance_monitor == "worst_disk_busy") {
-								$y = (float)$row['VALUE'];
-					}
-				$metric = array($x, $y);
-				array_push($performanceData, $metric);
 				}
+			}
+			elseif ($performance_monitor == "memory") {
+				if ($db->dbType == 'mysql')
+				{
+				$sql = "Select ps.uptimehost_id, pa.sample_id, ps.sample_time, pa.free_mem, ec.memsize
+						from performance_sample ps
+						join performance_aggregate pa on pa.sample_id = ps.id
+						join entity_configuration ec on ec.entity_id = ps.uptimehost_id
+						where ps.uptimehost_id = $element_id
+						and ps.sample_time > date_sub(now(),interval  ". $time_frame . " second)
+						order by ps.sample_time";
+				}
+				elseif($db->dbType == "oracle") {
+				$sql = "Select ps.uptimehost_id, pa.sample_id, ps.sample_time, pa.free_mem, ec.memsize
+						from performance_sample ps
+						join performance_aggregate pa on pa.sample_id = ps.id
+						join entity_configuration ec on ec.entity_id = ps.uptimehost_id
+						where ps.uptimehost_id = $element_id
+						and ps.sample_time > sysdate - interval  '". $time_frame . "' second
+						order by ps.sample_time";
+
+				}
+				elseif($db->dbType == "mssql")
+				{
+				$sql = "Select ps.uptimehost_id, pa.sample_id, ps.sample_time, pa.free_mem, ec.memsize
+						from performance_sample ps
+						join performance_aggregate pa on pa.sample_id = ps.id
+						join entity_configuration ec on ec.entity_id = ps.uptimehost_id
+						where ps.uptimehost_id = $element_id
+						and ps.sample_time > DATEADD(second, -". $time_frame . ", GETDATE())
+						order by ps.sample_time";
+				}
+
+
+			}
+			else {
+				die('Invalid query');
+			}
+	     
+				$result = $db->execQuery($sql);
+
+				foreach($result as $row) {
+					$sample_time = strtotime($row['SAMPLE_TIME'])-$offset;
+					$x = $sample_time * 1000;
+					if ($performance_monitor == "cpu") {
+						$a = (float)$row['CPU_USR'];
+						$b = (float)$row['CPU_SYS'];
+						$c = (float)$row['CPU_WIO'];
+						$y = ($a + $b + $c);
+					} elseif ($performance_monitor == "memory") {
+						$total_ram = (float)$row['MEMSIZE'];
+						$free_ram = (float)$row['FREE_MEM'];
+						$used_ram = $total_ram - $free_ram;
+						$y = round(($used_ram / $total_ram * 100), 1);
+					} elseif ($performance_monitor == "used_swap_percent" or $performance_monitor == "worst_disk_usage"
+								or $performance_monitor == "worst_disk_busy") {
+									$y = (float)$row['VALUE'];
+						}
+					$metric = array($x, $y);
+					array_push($performanceData, $metric);
+					}
+				
+			$element_name = $eg['DISPLAY_NAME'];			
 			
-		// Get Element Name
-		$sql_element_name = "Select display_name from entity where entity_id = $element_id";
-		$result = $db->execQuery($sql_element_name);
-		$row = $result[0];
-		$element_name = $row['DISPLAY_NAME'];			
-		
-		
-		
-		array_push($oneElement, $element_name);
-		array_push($oneElement, $performanceData);
-		//print_r($performanceData);
-		array_push($json, $oneElement);
-		$oneElement = array();
-		$performanceData = array();
+			
+			
+			array_push($oneElement, $element_name);
+			array_push($oneElement, $performanceData);
+			//print_r($performanceData);
+			array_push($json, $oneElement);
+			$oneElement = array();
+			$performanceData = array();
+		}
 	}
     // Echo results as JSON
     echo json_encode($json);
