@@ -38,11 +38,15 @@ if (isset($_GET['monitor'])){
 	$performance_monitor = $_GET['monitor'];
 
 }
-if (isset($_GET['element'])){
-	$elementList = explode(",", $_GET['element']);
+if (isset($_GET['elements'])){
+	$elementList = explode(",", $_GET['elements']);
 }
-if (isset($_GET['group'])){
-	$groupList = explode(",", $_GET['group']);
+if (isset($_GET['groups'])){
+	$groupList = explode(",", $_GET['groups']);
+}
+
+if (isset($_GET['views'])){
+	$viewList = explode(",", $_GET['views']);
 }
 
 if (isset($_GET['port'])){
@@ -67,6 +71,48 @@ else
  echo "unable to connect to DB exiting";	
  exit(1);
 }
+
+//now build a look-up of entity_names based on the elementList
+if (isset($elementList))
+{
+	$imploded_element_list = implode(", ", $elementList);
+	$get_element_names = "select entity_id, display_name from entity where entity_id in ( $imploded_element_list )";
+	$elements_with_names = $db->execQuery($get_element_names);
+}
+else
+{
+	$elements_with_names = array();
+}
+
+//add elements from groups & views to the elementList
+foreach ($groupList as $group_id) {
+
+ 		$get_elements_sql = "select entity_id, display_name from entity where entity_group_id = $group_id";
+		$elements_from_group = $db->execQuery($get_elements_sql);
+		foreach ($elements_from_group as $eg) {
+			if(!in_array($eg['ENTITY_ID'], $elementList)) {
+				array_push($elements_with_names, $eg);
+				array_push($elementList, $eg['ENTITY_ID']);
+			}
+		}
+}
+foreach ($viewList as $view_id) {
+
+ 		$get_elements_sql = "select entity_id, display_name from entity e
+ 							 join entity_view_entity eve on e.entity_id = eve.host_id
+ 							 where entity_view_id = $view_id";
+		$elements_from_view = $db->execQuery($get_elements_sql);
+		foreach ($elements_from_view as $eg) {
+			if(!in_array($eg['ENTITY_ID'], $elementList)) {
+				array_push($elementList, $eg['ENTITY_ID']);
+				array_push($elements_with_names, $eg);
+			}
+		}
+}
+
+
+
+
 
 // Enumerate monitors  	
 if ($query_type == "monitors") {
@@ -386,8 +432,7 @@ elseif ($query_type == "elements_for_performance") {
 
 // Enumerate elements with performance counters   
 elseif ($query_type == "groups_for_performance") {
-    $sql = "select entity_group_id, name from entity_group;
-            ";
+    $sql = "select entity_group_id, name from entity_group;";
 			
 	    $result = $db->execQuery($sql);
 		
@@ -399,16 +444,26 @@ elseif ($query_type == "groups_for_performance") {
     echo json_encode($json);
 }
 
+// Enumerate elements with performance counters   
+elseif ($query_type == "views_for_performance") {
+    $sql = "select id, name from entity_view;
+            ";
+			
+	    $result = $db->execQuery($sql);
+		
+		foreach ($result as $row) {
+			$json[$row['NAME']] = $row['ID'];
+		}
+	
+	// Echo results as JSON
+    echo json_encode($json);
+}
+
 // Get performance metrics
 elseif ($query_type == "performance") {
 
-	foreach ($elementList as $group_id) {
-
-		$get_elements_sql = "select entity_id, display_name from entity where entity_group_id = $group_id";
-		$elements_from_group = $db->execQuery($get_elements_sql);
-
-		foreach ($elements_from_group as $eg) {
-			$element_id = $eg['ENTITY_ID'];
+	foreach ($elements_with_names as $element) {
+			$element_id = $element['ENTITY_ID'];
 
 			if ($performance_monitor == "cpu") {
 				if ($db->dbType == "mysql") {
@@ -531,7 +586,7 @@ elseif ($query_type == "performance") {
 					array_push($performanceData, $metric);
 					}
 				
-			$element_name = $eg['DISPLAY_NAME'];			
+			$element_name = $element['DISPLAY_NAME'];			
 			
 			
 			
@@ -542,7 +597,6 @@ elseif ($query_type == "performance") {
 			$oneElement = array();
 			$performanceData = array();
 		}
-	}
     // Echo results as JSON
     echo json_encode($json);
 }

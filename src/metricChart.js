@@ -136,6 +136,8 @@
 			$("#performance-div").show();
 			$("select.performance-metrics").chosen();
 			$("select.performance-elements").chosen();
+			$("select.performance-groups").chosen();
+			$("select.performance-views").chosen();
 			
 			$("select.performance-metrics").empty();
 			$("select.performance-metrics").append('<option value="cpu">CPU - Used (%)</option>');
@@ -271,7 +273,7 @@
 	$("select.performance-metrics").on('change', function(evt, params) {
 		$("select.performance-elements").empty();
 		$("select.performance-elements").trigger("chosen:updated");
-		requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=groups_for_performance';
+		requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=elements_for_performance';
 		if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};
 		$.getJSON(requestString, function(data) {}).done(function(data) {
 			if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Request succeeded!')};
@@ -291,11 +293,69 @@
 			console.log('Gadget #' + gadgetInstanceId + ' - Request failed! ' + textStatus);
 		}).always(function() {
 			// console.log('Request completed.');
-		});	
+		});
+
+
+		$("select.performance-groups").empty();
+        $("select.performance-groups").trigger("chosen:updated");
+        requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=groups_for_performance';
+        if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};
+        $.getJSON(requestString, function(data) {}).done(function(data) {
+            if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Request succeeded!')};
+            $("select.performance-groups").empty();
+            $.each(data, function(key, val) {
+                $("select.performance-groups").append('<option value="' + val + '">' + key + '</option>');    
+            });
+            if (typeof elementValue !== 'undefined' && metricType == 'performance') {
+                if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Setting performance monitor element droptown to: '
+                                + elementValue)};
+                $("select.performance-groups").val(elementValue).trigger("chosen:updated").trigger('change');
+            } else {
+                $("select.performance-groups").trigger("chosen:updated").trigger('change');
+            }
+            $("#performance-element-count").text($('#performance-groups option').size());
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.log('Gadget #' + gadgetInstanceId + ' - Request failed! ' + textStatus);
+        }).always(function() {
+            // console.log('Request completed.');
+        });
+
+
+        $("select.performance-views").empty();
+        $("select.performance-views").trigger("chosen:updated");
+        requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=views_for_performance';
+        if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};
+        $.getJSON(requestString, function(data) {}).done(function(data) {
+            if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Request succeeded!')};
+            $("select.performance-views").empty();
+            $.each(data, function(key, val) {
+                $("select.performance-views").append('<option value="' + val + '">' + key + '</option>');    
+            });
+            if (typeof elementValue !== 'undefined' && metricType == 'performance') {
+                if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Setting performance monitor element droptown to: '
+                                + elementValue)};
+                $("select.performance-views").val(elementValue).trigger("chosen:updated").trigger('change');
+            } else {
+                $("select.performance-views").trigger("chosen:updated").trigger('change');
+            }
+            $("#performance-element-count").text($('#performance-views option').size());
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.log('Gadget #' + gadgetInstanceId + ' - Request failed! ' + textStatus);
+        }).always(function() {
+            // console.log('Request completed.');
+        });
+
+
 	});
 	
 	// Performance monitor element changed
 	$("select.performance-elements").on('change', function(evt, params) {
+		launchDivs();
+	});
+	$("select.performance-views").on('change', function(evt, params) {
+		launchDivs();
+	});
+	$("select.performance-groups").on('change', function(evt, params) {
 		launchDivs();
 	});
 	
@@ -432,6 +492,8 @@
 			settings.metricType = 'performance';
 			settings.metricValue = $("select.performance-metrics").val();
 			settings.elementValue = $("select.performance-elements").val();
+			settings.elementGroupValue = $("select.performance-groups").val();
+			settings.elementViewValue = $("select.performance-views").val();
 			if ($("#chart-title-btn").hasClass('active')) {
 				settings.chartTitle = $('select.performance-metrics option:selected').text();
 				/*settings.chartTitle = $('select.performance-metrics option:selected').text() + ' for '
@@ -488,6 +550,8 @@
 		metricValue = settings.metricValue;
 		objectValue = settings.objectValue;
 		elementValue = settings.elementValue;
+		elementGroupValue = settings.elementGroupValue;
+		elementViewValue = settings.elementViewValue;
 		portValue = settings.portValue;
 		timeFrame = settings.timeFrame;
 		refreshInterval = settings.refreshInterval;
@@ -629,10 +693,13 @@
 			//series: [{}]};
 			series: []};
 		requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=' + settings.metricType
-						+ '&monitor=' + settings.metricValue + '&element=' + settings.elementValue
-						+ '&port=' + settings.portValue
+						+ '&monitor=' + settings.metricValue  
+						+ '&port=' + settings.portValue  
 						+ '&object_list=' + settings.objectValue
-						+ '&time_frame=' + settings.timeFrame ;
+						+ '&time_frame=' + settings.timeFrame
+						+ '&elements=' + settings.elementValue
+						+ '&groups=' + settings.elementGroupValue
+						+ '&views=' + settings.elementViewValue ;
 		if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};
 
 		$.ajax({url: requestString,
