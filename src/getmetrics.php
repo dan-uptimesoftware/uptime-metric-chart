@@ -417,7 +417,7 @@ elseif ($query_type == "elements_for_performance") {
             and e.entity_subtype_id in (1,21, 12)
             and eb.name != 'MonitorDummyVmware'
             and e.monitored = 1
-            order by display_name;
+            order by e.display_name asc;
             ";
 			
 	    $result = $db->execQuery($sql);
@@ -432,7 +432,7 @@ elseif ($query_type == "elements_for_performance") {
 
 // Enumerate elements with performance counters   
 elseif ($query_type == "groups_for_performance") {
-    $sql = "select entity_group_id, name from entity_group;";
+    $sql = "select entity_group_id, name from entity_group order by name asc;";
 			
 	    $result = $db->execQuery($sql);
 		
@@ -446,7 +446,7 @@ elseif ($query_type == "groups_for_performance") {
 
 // Enumerate elements with performance counters   
 elseif ($query_type == "views_for_performance") {
-    $sql = "select id, name from entity_view;
+    $sql = "select id, name from entity_view order by name asc;
             ";
 			
 	    $result = $db->execQuery($sql);
