@@ -14,6 +14,7 @@
 	var gadgetInstanceId = uptimeGadget.getInstanceId();
 	var currentURL = $("script#ownScript").attr("src");	
 	var getMetricsPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1) + 'getmetrics.php';
+	var getDropDownsPath = currentURL.substr(0,$("script#ownScript").attr("src").lastIndexOf("/")+1) + 'getdropdowns.php';
 	var timeFrameOptions = {"3600" : "hour", "21600" : "6 hours",
 				"43200" : "12 hours", "86400" : "day",
 				"172800" : "2 days", "604800" : "week",
@@ -273,7 +274,7 @@
 	$("select.performance-metrics").on('change', function(evt, params) {
 		$("select.performance-elements").empty();
 		$("select.performance-elements").trigger("chosen:updated");
-		requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=elements_for_performance';
+		requestString = getDropDownsPath + '?uptime_offest=' + uptimeOffset + '&query_type=elements_for_performance';
 		if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};
 		$.getJSON(requestString, function(data) {}).done(function(data) {
 			if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Request succeeded!')};
@@ -298,7 +299,7 @@
 
 		$("select.performance-groups").empty();
         $("select.performance-groups").trigger("chosen:updated");
-        requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=groups_for_performance';
+        requestString = getDropDownsPath + '?uptime_offest=' + uptimeOffset + '&query_type=groups_for_performance';
         if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};
         $.getJSON(requestString, function(data) {}).done(function(data) {
             if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Request succeeded!')};
@@ -323,7 +324,7 @@
 
         $("select.performance-views").empty();
         $("select.performance-views").trigger("chosen:updated");
-        requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=views_for_performance';
+        requestString = getDropDownsPath + '?uptime_offest=' + uptimeOffset + '&query_type=views_for_performance';
         if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};
         $.getJSON(requestString, function(data) {}).done(function(data) {
             if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Request succeeded!')};

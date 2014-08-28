@@ -408,57 +408,6 @@ elseif ($query_type == "servicemonitor") {
     echo json_encode($json);
 }
 
-// Enumerate elements with performance counters   
-elseif ($query_type == "elements_for_performance") {
-    $sql = "select e.entity_id, e.display_name
-            from entity e
-            join erdc_base eb on eb.erdc_base_id = e.defining_erdc_base_id
-            where e.entity_type_id not in (2, 3, 4, 5)
-            and e.entity_subtype_id in (1,21, 12)
-            and eb.name != 'MonitorDummyVmware'
-            and e.monitored = 1
-            order by e.display_name asc;
-            ";
-			
-	    $result = $db->execQuery($sql);
-		
-		foreach ($result as $row) {
-			$json[$row['DISPLAY_NAME']] = $row['ENTITY_ID'];
-		}
-	
-	// Echo results as JSON
-    echo json_encode($json);
-}
-
-// Enumerate elements with performance counters   
-elseif ($query_type == "groups_for_performance") {
-    $sql = "select entity_group_id, name from entity_group order by name asc;";
-			
-	    $result = $db->execQuery($sql);
-		
-		foreach ($result as $row) {
-			$json[$row['NAME']] = $row['ENTITY_GROUP_ID'];
-		}
-	
-	// Echo results as JSON
-    echo json_encode($json);
-}
-
-// Enumerate elements with performance counters   
-elseif ($query_type == "views_for_performance") {
-    $sql = "select id, name from entity_view order by name asc;
-            ";
-			
-	    $result = $db->execQuery($sql);
-		
-		foreach ($result as $row) {
-			$json[$row['NAME']] = $row['ID'];
-		}
-	
-	// Echo results as JSON
-    echo json_encode($json);
-}
-
 // Get performance metrics
 elseif ($query_type == "performance") {
 
