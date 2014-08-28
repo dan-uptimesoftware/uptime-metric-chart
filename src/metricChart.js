@@ -640,10 +640,12 @@
 	
 	function printSettings(settings) {
 		var printString = 'metricType: ' + settings.metricType + ', metricValue: ' + settings.metricValue
-				+ ', elementValue: ' + settings.elementValue + ', portValue: ' + settings.portValue
+				+ ', portValue: ' + settings.portValue
 				+ ', objectValue: ' + settings.objectValue + ', timeFrame: ' + settings.timeFrame
 				+ ', refreshInterval: ' + settings.refreshInterval + ', chartType: ' + settings.chartType
-				+ ', chartTitle: ' + settings.chartTitle + ', seriesTitle: ' + settings.seriesTitle;
+				+ ', chartTitle: ' + settings.chartTitle + ', seriesTitle: ' + settings.seriesTitle
+				+ ', elementValue: ' + settings.elementValue + ', elementGroupValue: ' + settings.elementGroupValue
+				+ ', elementViewValue: ' + settings.elementViewValue;
 		return printString;
 	}
 
@@ -749,7 +751,7 @@
 				
 				})
 			.fail (function(jqXHR, textStatus, errorThrown) {
-				errorMessage = 'HTTP Status Code ' + jqXHR.status;
+				errorMessage = textStatus + ' - ' + errorThrown;
 				displayError(errorMessage,requestString);
 				showEditPanel();
 				$("#closeSettings").button('reset');
