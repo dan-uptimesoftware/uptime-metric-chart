@@ -147,7 +147,7 @@
 			$("select.performance-metrics").append('<option value="worst_disk_busy">Disk - Worst Disk Busy (%)</option>');
 			
 			if (typeof metricValue !== 'undefined' && metricType == 'performance') {
-				if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Setting performance monitor metric droptown to: '
+				if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Setting performance monitor metric dropdown to: '
 							    + metricValue)};
 				$("select.performance-metrics").val(metricValue).trigger("chosen:updated").trigger('change');			
 			} else {
@@ -307,9 +307,9 @@
                 $("select.performance-groups").append('<option value="' + val + '">' + key + '</option>');    
             });
             if (typeof elementValue !== 'undefined' && metricType == 'performance') {
-                if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Setting performance monitor element droptown to: '
-                                + elementValue)};
-                $("select.performance-groups").val(elementValue).trigger("chosen:updated").trigger('change');
+                if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Setting performance monitor group droptown to: '
+                                + elementGroupValue)};
+                $("select.performance-groups").val(elementGroupValue).trigger("chosen:updated").trigger('change');
             } else {
                 $("select.performance-groups").trigger("chosen:updated").trigger('change');
             }
@@ -332,9 +332,9 @@
                 $("select.performance-views").append('<option value="' + val + '">' + key + '</option>');    
             });
             if (typeof elementValue !== 'undefined' && metricType == 'performance') {
-                if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Setting performance monitor element droptown to: '
-                                + elementValue)};
-                $("select.performance-views").val(elementValue).trigger("chosen:updated").trigger('change');
+                if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Setting performance monitor view droptown to: '
+                                + elementViewValue)};
+                $("select.performance-views").val(elementViewValue).trigger("chosen:updated").trigger('change');
             } else {
                 $("select.performance-views").trigger("chosen:updated").trigger('change');
             }
