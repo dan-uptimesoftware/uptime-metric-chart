@@ -57,20 +57,11 @@
                       <div id="metrics-type-div">
 		
 			<div class="btn-group pull-left" style="margin-bottom: 12px;" data-toggle="buttons" name="metric-type" id="metric-type-radio" data-content="Type of Metrics: Select the type of metrics you would like to graph" data-placement="bottom" data-trigger="hover">
-				
-				  <label class="btn btn-primary" id="service-monitor-metrics-radio">
-					<input type="radio" name="metric-type-options" id="service-monitor-metrics-btn" value="service-monitor">
-								&nbsp; Service Monitor &nbsp;
-				  </label>
+
 				  <label class="btn btn-primary" id="performance-metrics-radio">
 								<input type="radio" name="metric-type-options" id="performance-metrics-btn" value="performance-monitor">
 								&nbsp; OS Perf &nbsp;
-				  </label>
-				  <label class="btn btn-primary" id="network-metrics-radio">
-								<input type="radio" name="metric-type-options" id="network-metrics-btn" value="network-monitor">
-								&nbsp; Network Device &nbsp;
-				  </label>
-		
+				  </label>		
 			</div>
 		
 			<div id="uptime-icon" style="text-align: left">
