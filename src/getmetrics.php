@@ -538,11 +538,12 @@ elseif ($query_type == "performance") {
 			$element_name = $element['DISPLAY_NAME'];			
 			
 			
-			
-			array_push($oneElement, $element_name);
-			array_push($oneElement, $performanceData);
-			//print_r($performanceData);
-			array_push($json, $oneElement);
+			if ($performanceData)
+			{
+				array_push($oneElement, $element_name);
+				array_push($oneElement, $performanceData);
+				array_push($json, $oneElement);
+			}	
 			$oneElement = array();
 			$performanceData = array();
 		}
