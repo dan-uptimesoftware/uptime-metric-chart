@@ -53,6 +53,11 @@ if (isset($_GET['monitor'])){
     $performance_monitor = $_GET['monitor'];
 
 }
+
+if (isset($_GET['element'])){
+    $elementList = explode(",", $_GET['element']);
+}
+
 if (isset($_GET['elements'])){
     $elementList = explode(",", $_GET['elements']);
 }
@@ -86,13 +91,16 @@ $uptime_api_port = 9997;
 $uptime_api_version = "v1";
 $uptime_api_ssl = true;
 
-// Create API object
-$uptime_api = new uptimeApi($uptime_api_username, $uptime_api_password, $uptime_api_hostname, $uptime_api_port, $uptime_api_version, $uptime_api_ssl);
 
 
-
-// Enumerate elements with performance counters   
+// Enumerate elements with PPGs   
 if ($query_type == "elements_for_performance") {
+
+    // Create API object
+    $uptime_api = new uptimeApi($uptime_api_username, $uptime_api_password, $uptime_api_hostname, $uptime_api_port, $uptime_api_version, $uptime_api_ssl);
+
+
+
     $elements = $uptime_api->getElements("type=Server&isMonitored=1");
 
     foreach ($elements as $d) {
@@ -117,8 +125,11 @@ if ($query_type == "elements_for_performance") {
     echo json_encode($json);
 }
 
-// Enumerate elements with performance counters   
+//Groups for Performance Monitors  
 elseif ($query_type == "groups_for_performance") {
+
+    // Create API object
+    $uptime_api = new uptimeApi($uptime_api_username, $uptime_api_password, $uptime_api_hostname, $uptime_api_port, $uptime_api_version, $uptime_api_ssl);
 
 
     $groups = $uptime_api->getGroups();
@@ -133,20 +144,10 @@ elseif ($query_type == "groups_for_performance") {
     echo json_encode($json);
 }
 
-// Enumerate elements with performance counters   
+//Views for Performance Monitors  
 elseif ($query_type == "views_for_performance") {
     
-    $db = new uptimeDB;
-    if ($db->connectDB())
-    {
-        echo "";
-
-    }
-    else
-    {
-        echo "unable to connect to DB exiting";    
-        exit(1);
-    }
+    $db = setupDB();
 
 
     $sql = "select id, name from entity_view order by name asc;
@@ -165,10 +166,117 @@ elseif ($query_type == "views_for_performance") {
     echo json_encode($json);
 }
 
+// Enumerate monitors   
+elseif ($query_type == "monitors") {
+
+    $db = setupDB();
+
+
+    $sql = "select distinct erp.ERDC_PARAMETER_ID as erdc_param, eb.name, ep.short_description as short_desc, ep.parameter_type, ep.units, ep.data_type_id, description
+            from erdc_retained_parameter erp
+            join erdc_configuration ec on erp.configuration_id = ec.id
+            join erdc_base eb on ec.erdc_base_id = eb.erdc_base_id
+            join erdc_parameter ep on ep.erdc_parameter_id = erp.erdc_parameter_id
+            join erdc_instance ei on ec.id = ei.configuration_id
+            where ei.entity_id is not null
+            order by name, description;
+            ";
+
+    $result = $db->execQuery($sql);
+    foreach ($result as $row) {
+
+            $my_data_type_id = $row['DATA_TYPE_ID'];
+            if ($my_data_type_id == 2 or $my_data_type_id == 3 or $my_data_type_id == 6) {              
+                if ($row['UNITS'] == "") {
+                    $k = $row['ERDC_PARAM'] . "-" . $row['DATA_TYPE_ID'];
+                    $v = $row['NAME'] . " - " . $row['SHORT_DESC'];
+                    $json[$k] = $v;
+
+                } else {
+                    $k = $row['ERDC_PARAM'] . "-" . $row['DATA_TYPE_ID'] ;
+                    $v = $row['NAME'] . " - " . $row['SHORT_DESC'] . " (" . $row['UNITS'] . ")";
+                    $json[$k] = $v;
+                }
+            }
+
+    }
+    // Echo results as JSON
+    echo json_encode($json);
+}
+
+
+//Enumerate elements and monitor instance namesand associate with a particular monitor
+elseif ($query_type == "elements_for_monitor") {
+
+    $db = setupDB();
+    $sql = "select distinct e.entity_id, e.name, e.display_name, erp.ERDC_PARAMETER_ID as erdc_param, ei.erdc_instance_id as erdc_instance, ei.name monitor_name 
+            from erdc_retained_parameter erp
+            join erdc_instance ei on erp.CONFIGURATION_ID = ei.configuration_id
+            join entity e on e.ENTITY_ID = ei.ENTITY_ID
+            where erp.ERDC_PARAMETER_ID = $erdc_parameter_id;
+            ";
+
+        $result = $db->execQuery($sql);
+        
+        foreach ($result as $row) {
+            $k = $row['ENTITY_ID'] . "-" . $row['ERDC_INSTANCE'];
+            $v = $row['DISPLAY_NAME'] . " - " . $row['MONITOR_NAME'];
+            $json[$k] = $v;
+            }
+        
+    // Echo results as JSON
+    echo json_encode($json);
+}
+
+elseif ($query_type == "ranged_objects") {
+    
+    $db = setupDB();
+
+    $i = 0;
+    foreach ($elementList as $element_id_and_erdc_id) {
+        $ids = explode("-", $element_id_and_erdc_id);
+        $element_id = $ids[0];
+        $erdc_instance_id = $ids[1];
+    
+
+        $sql = "select * 
+                from ranged_object ro
+                where ro.instance_id = $erdc_instance_id               
+                ";
+
+        $result = $db->execQuery($sql);
+        
+        foreach ($result as $row) {
+            $json[$row['INSTANCE_ID']. "-" . $row['ID']]
+             = $row['OBJECT_NAME'];
+        }
+    }
+    // Echo results as JSON
+    echo json_encode($json);
+                
+}
+
+
 // Unsupported request
 else {
     echo "Error: Unsupported Request '$query_type'" . "</br>";
     echo "Acceptable types are 'elements', 'monitors', and 'metrics'" . "</br>";
     }
+
+function setupDB()
+{
+    $db = new uptimeDB;
+    if ($db->connectDB())
+    {
+        return $db;
+    }
+    else
+    {
+        echo "unable to connect to DB exiting";    
+        exit(1);
+    }
+
+}
+
 
 ?>

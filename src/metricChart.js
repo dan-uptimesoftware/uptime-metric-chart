@@ -106,7 +106,7 @@
 			$("select.service-monitor-elements").chosen();
 			$("select.service-monitor-ranged").chosen();
 			
-			requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=monitors';
+			requestString = getDropDownsPath + '?uptime_offest=' + uptimeOffset + '&query_type=monitors';
 			if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};
 			$.getJSON(requestString, function(data) {
 			}).done(function(data) {
@@ -198,7 +198,7 @@
 	$("select.service-monitor-metrics").on('change', function(evt, params) {
 		$("select.service-monitor-elements").empty();
 		$("select.service-monitor-elements").trigger("chosen:updated");
-		requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=elements_for_monitor&monitor='
+		requestString = getDropDownsPath + '?uptime_offest=' + uptimeOffset + '&query_type=elements_for_monitor&monitor='
 						+ $("select.service-monitor-metrics").val();
 		if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};
 		$.getJSON(requestString, function(data) {
@@ -241,7 +241,7 @@
 		
 		$("select.service-monitor-ranged").empty();
 		$("select.service-monitor-ranged").trigger("chosen:updated");
-		requestString = getMetricsPath + '?uptime_offest=' + uptimeOffset + '&query_type=ranged_objects&element='
+		requestString = getDropDownsPath + '?uptime_offest=' + uptimeOffset + '&query_type=ranged_objects&element='
 						+ $("select.service-monitor-elements").val() 
 						+ '&object_list=' + $("select.service-monitor-ranged").val();
 		if (debugMode) {console.log('Gadget #' + gadgetInstanceId + ' - Requesting: ' + requestString)};

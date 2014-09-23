@@ -61,7 +61,12 @@
 				  <label class="btn btn-primary" id="performance-metrics-radio">
 								<input type="radio" name="metric-type-options" id="performance-metrics-btn" value="performance-monitor">
 								&nbsp; OS Perf &nbsp;
-				  </label>		
+				  </label>	
+                  <label class="btn btn-primary" id="service-monitor-metrics-radio">
+                                <input type="radio" name="metric-type-options" id="service-monitor-metrics-btn" value="service-monitor">
+                                &nbsp; Service Monitor &nbsp;
+                  </label>
+	
 			</div>
 		
 			<div id="uptime-icon" style="text-align: left">
